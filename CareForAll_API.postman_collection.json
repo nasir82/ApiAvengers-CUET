@@ -1,0 +1,567 @@
+{
+	"info": {
+		"_postman_id": "careforall-api-collection",
+		"name": "CareForAll API Collection",
+		"description": "Complete API collection for CareForAll Donation Platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Checks",
+			"item": [
+				{
+					"name": "API Gateway Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Campaign Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3001",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Pledge Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3002/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3002",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Payment Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3003/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3003",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "User Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3004/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3004",
+							"path": ["health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Service",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('userId', jsonData.data.user.id);",
+									"    pm.environment.set('token', jsonData.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/users/register",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "users", "register"]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('userId', jsonData.data.user.id);",
+									"    pm.environment.set('token', jsonData.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/users/login",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "users", "login"]
+						}
+					}
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8000/api/users/{{userId}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "users", "{{userId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Campaign Service",
+			"item": [
+				{
+					"name": "Create Campaign",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('campaignId', jsonData.data.campaign._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Help Save Lives\",\n    \"description\": \"Medical emergency fund for urgent cases\",\n    \"goalAmount\": 50000,\n    \"createdBy\": \"{{userId}}\",\n    \"category\": \"MEDICAL\",\n    \"imageUrl\": \"https://example.com/image.jpg\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/campaigns",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "campaigns"]
+						}
+					}
+				},
+				{
+					"name": "Get All Campaigns",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/campaigns?page=1&limit=20",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "campaigns"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Campaign by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/campaigns/{{campaignId}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "campaigns", "{{campaignId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Pledge Service",
+			"item": [
+				{
+					"name": "Create Pledge",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('pledgeId', jsonData.data.pledge._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"campaignId\": \"{{campaignId}}\",\n    \"amount\": 100,\n    \"idempotencyKey\": \"pledge-{{$timestamp}}-{{$randomInt}}\",\n    \"userId\": \"{{userId}}\",\n    \"message\": \"Keep up the great work!\",\n    \"anonymous\": false\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/pledges",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "pledges"]
+						}
+					}
+				},
+				{
+					"name": "Create Pledge (Duplicate - Test Idempotency)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"campaignId\": \"{{campaignId}}\",\n    \"amount\": 100,\n    \"idempotencyKey\": \"pledge-test-same-key\",\n    \"userId\": \"{{userId}}\",\n    \"message\": \"Duplicate request\",\n    \"anonymous\": false\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/pledges",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "pledges"]
+						},
+						"description": "Send this request twice with the same idempotencyKey to test idempotency"
+					}
+				},
+				{
+					"name": "Get Pledge by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/pledges/{{pledgeId}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "pledges", "{{pledgeId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get User Pledges",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/pledges/user/{{userId}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "pledges", "user", "{{userId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Payment Service",
+			"item": [
+				{
+					"name": "Process Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('paymentId', jsonData.data.payment._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pledgeId\": \"{{pledgeId}}\",\n    \"amount\": 100,\n    \"idempotencyKey\": \"payment-{{$timestamp}}-{{$randomInt}}\",\n    \"paymentMethod\": \"STRIPE\",\n    \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/payments",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "payments"]
+						}
+					}
+				},
+				{
+					"name": "Get Payment by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/payments/{{paymentId}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "payments", "{{paymentId}}"]
+						}
+					}
+				},
+				{
+					"name": "Webhook - Stripe (Payment Succeeded)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"evt_123456\",\n    \"type\": \"payment_intent.succeeded\",\n    \"data\": {\n        \"object\": {\n            \"id\": \"pi_123456\",\n            \"amount\": 10000,\n            \"status\": \"succeeded\"\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/webhooks/stripe",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "webhooks", "stripe"]
+						},
+						"description": "Simulate Stripe webhook. Send twice to test webhook idempotency."
+					}
+				}
+			]
+		},
+		{
+			"name": "Notification Service",
+			"item": [
+				{
+					"name": "Get User Notifications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/notifications/user/{{userId}}?page=1&limit=20",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "notifications", "user", "{{userId}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin Service",
+			"item": [
+				{
+					"name": "Get Admin Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/admin/stats",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["api", "admin", "stats"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Metrics",
+			"item": [
+				{
+					"name": "Campaign Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3001/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3001",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Pledge Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3002/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3002",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Payment Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3003/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3003",
+							"path": ["metrics"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "campaignId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "pledgeId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "paymentId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

@@ -1,0 +1,34 @@
+{
+  "name": "user-service",
+  "version": "1.0.0",
+  "description": "User Service with Authentication",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "winston": "^3.11.0",
+    "mongoose": "^7.6.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "amqplib": "^0.10.3",
+    "prom-client": "^15.1.0",
+    "@opentelemetry/api": "^1.7.0",
+    "@opentelemetry/sdk-node": "^0.45.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.40.0",
+    "@opentelemetry/exporter-jaeger": "^1.15.0",
+    "@opentelemetry/resources": "^1.15.0",
+    "@opentelemetry/semantic-conventions": "^1.15.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": ["microservice", "user", "auth"],
+  "author": "",
+  "license": "MIT"
+}
+

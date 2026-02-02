@@ -1,0 +1,464 @@
+# MongoDB Atlas Connection Strings Reference:
+# Cluster 0: mongodb+srv://n45islam_db_user:RVUITOizESaUT09g@cluster0.vsbjucs.mongodb.net/<database>?retryWrites=true&w=majority
+# Cluster 1: mongodb+srv://nayemahmedr45_db_user:yjxyfUzzmgQRyMII@cluster1.85psutp.mongodb.net/<database>?retryWrites=true&w=majority
+#
+# Database Names:
+# - campaigns (Cluster 0)
+# - pledges (Cluster 0)
+# - payments (Cluster 0)
+# - users (Cluster 1)
+# - admin (Cluster 1)
+# - notifications (Cluster 1)
+
+services:
+  # Campaign Service - Campaign Management with CQRS Read Models
+  campaign-service:
+    build:
+      context: ./services/campaign-service
+      dockerfile: Dockerfile
+    container_name: campaign-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=development
+      - LOG_LEVEL=info
+      - MONGODB_URI=mongodb+srv://n45islam_db_user:RVUITOizESaUT09g@cluster0.vsbjucs.mongodb.net/campaigns?retryWrites=true&w=majority
+      - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
+      - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      - LOGSTASH_URL=logstash:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    networks:
+      - careforall-network
+    restart: unless-stopped
+
+  # Pledge Service - Donation Pledges with Transactional Outbox
+  pledge-service:
+    build:
+      context: ./services/pledge-service
+      dockerfile: Dockerfile
+    container_name: pledge-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NODE_ENV=development
+      - LOG_LEVEL=info
+      - MONGODB_URI=mongodb+srv://n45islam_db_user:RVUITOizESaUT09g@cluster0.vsbjucs.mongodb.net/pledges?retryWrites=true&w=majority
+      - REDIS_URI=redis://redis:6379
+      - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
+      - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      - LOGSTASH_URL=logstash:8080
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    networks:
+      - careforall-network
+    restart: unless-stopped
+
+  # Payment Gateway Service - Payment Processing with State Machine
+  payment-service:
+    build:
+      context: ./services/payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - NODE_ENV=development
+      - LOG_LEVEL=info
+      - MONGODB_URI=mongodb+srv://n45islam_db_user:RVUITOizESaUT09g@cluster0.vsbjucs.mongodb.net/payments?retryWrites=true&w=majority
+      - REDIS_URI=redis://redis:6379
+      - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
+      - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      - LOGSTASH_URL=logstash:8080
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    networks:
+      - careforall-network
+    restart: unless-stopped
+
+  # User Service - User Management
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - NODE_ENV=development
+      - LOG_LEVEL=info
+      - MONGODB_URI=mongodb+srv://nayemahmedr45_db_user:yjxyfUzzmgQRyMII@cluster1.85psutp.mongodb.net/users?retryWrites=true&w=majority
+      - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
+      - JWT_SECRET=your-secret-key-change-in-production
+      - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      - LOGSTASH_URL=logstash:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    networks:
+      - careforall-network
+    restart: unless-stopped
+
+  # Admin Service - Admin Panel Backend
+  admin-service:
+    build:
+      context: ./services/admin-service
+      dockerfile: Dockerfile
+    container_name: admin-service
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - NODE_ENV=development
+      - LOG_LEVEL=info
+      - MONGODB_URI=mongodb+srv://nayemahmedr45_db_user:yjxyfUzzmgQRyMII@cluster1.85psutp.mongodb.net/admin?retryWrites=true&w=majority
+      - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
+      - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      - LOGSTASH_URL=logstash:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    networks:
+      - careforall-network
+    restart: unless-stopped
+
+  # Notification Service - Event-Driven Notifications
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "3006:3006"
+    environment:
+      - PORT=3006
+      - NODE_ENV=development
+      - LOG_LEVEL=info
+      - MONGODB_URI=mongodb+srv://nayemahmedr45_db_user:yjxyfUzzmgQRyMII@cluster1.85psutp.mongodb.net/notifications?retryWrites=true&w=majority
+      - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
+      - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      - LOGSTASH_URL=logstash:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3006/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    networks:
+      - careforall-network
+    restart: unless-stopped
+
+  # RabbitMQ - Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin123
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+    networks:
+      - careforall-network
+    restart: unless-stopped
+
+  # Redis - Cache & Idempotency Storage
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 5
+
+  # Frontend - React Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3007:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+  # API Gateway - Nginx
+  api-gateway:
+    image: nginx:alpine
+    container_name: api-gateway
+    ports:
+      - "8000:80"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - campaign-service
+      - pledge-service
+      - payment-service
+      - user-service
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ELK Stack - Logging
+  # Elasticsearch - Store logs
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+
+  # Logstash - Process logs
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    ports:
+      - "5044:5044"  # TCP input
+      - "8081:8080"  # HTTP input (mapped to 8081 to avoid conflict)
+      - "9600:9600"  # Monitoring API
+    volumes:
+      - ./infrastructure/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9600/_node/stats || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+
+  # Kibana - Visualize logs
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+
+  # Prometheus - Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  # Grafana - Metrics Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  # Jaeger - Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      # Note: Port 14268 (collector HTTP) not exposed externally - services use internal network
+      - "6831:6831/udp"  # Jaeger agent UDP
+      - "6832:6832/udp"  # Jaeger agent UDP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:16686 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+networks:
+  careforall-network:
+    driver: bridge
+
+volumes:
+  rabbitmq-data:
+    driver: local
+  redis-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+

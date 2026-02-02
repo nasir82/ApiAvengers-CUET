@@ -1,0 +1,11 @@
+.profile-section {
+  margin-bottom: 40px;
+}
+
+.pledges-list,
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+

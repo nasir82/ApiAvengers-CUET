@@ -1,0 +1,10 @@
+# Handle line endings automatically
+* text=auto
+
+# Force LF for shell scripts and Dockerfiles so they work in Linux
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# Force LF for config files
+*.json text eol=lf
+*.js text eol=lf

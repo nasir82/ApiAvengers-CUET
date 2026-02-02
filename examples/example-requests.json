@@ -1,0 +1,260 @@
+{
+  "campaigns": {
+    "getAll": {
+      "method": "GET",
+      "url": "/api/campaigns?status=ACTIVE&page=1&limit=20",
+      "headers": {},
+      "body": null
+    },
+    "getById": {
+      "method": "GET",
+      "url": "/api/campaigns/65a1b2c3d4e5f6g7h8i9j0k1",
+      "headers": {},
+      "body": null
+    },
+    "getTotals": {
+      "method": "GET",
+      "url": "/api/campaigns/65a1b2c3d4e5f6g7h8i9j0k1/totals",
+      "headers": {},
+      "body": null
+    },
+    "create": {
+      "method": "POST",
+      "url": "/api/campaigns",
+      "headers": {
+        "Authorization": "Bearer <admin_token>",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "title": "Help Save Lives - Medical Emergency Fund",
+        "description": "Urgent medical fund for critical surgeries",
+        "goalAmount": 50000.00,
+        "category": "MEDICAL",
+        "deadline": "2024-03-15T00:00:00Z",
+        "imageUrl": "https://example.com/campaign-image.jpg"
+      }
+    }
+  },
+  "pledges": {
+    "create": {
+      "method": "POST",
+      "url": "/api/pledges",
+      "headers": {
+        "Authorization": "Bearer <user_token>",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "campaignId": "65a1b2c3d4e5f6g7h8i9j0k1",
+        "amount": 100.00,
+        "idempotencyKey": "pledge-20240120-123456-abc123",
+        "userId": "65a1b2c3d4e5f6g7h8i9j0k2",
+        "anonymous": false,
+        "message": "Hope this helps!"
+      }
+    },
+    "createAnonymous": {
+      "method": "POST",
+      "url": "/api/pledges",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "campaignId": "65a1b2c3d4e5f6g7h8i9j0k1",
+        "amount": 50.00,
+        "idempotencyKey": "pledge-20240120-123457-def456",
+        "anonymous": true,
+        "message": "Anonymous donation"
+      }
+    },
+    "getById": {
+      "method": "GET",
+      "url": "/api/pledges/65a1b2c3d4e5f6g7h8i9j0k3",
+      "headers": {
+        "Authorization": "Bearer <user_token>"
+      },
+      "body": null
+    },
+    "getUserPledges": {
+      "method": "GET",
+      "url": "/api/pledges/user/65a1b2c3d4e5f6g7h8i9j0k2?page=1&limit=20",
+      "headers": {
+        "Authorization": "Bearer <user_token>"
+      },
+      "body": null
+    }
+  },
+  "payments": {
+    "process": {
+      "method": "POST",
+      "url": "/api/payments",
+      "headers": {
+        "Authorization": "Bearer <user_token>",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "pledgeId": "65a1b2c3d4e5f6g7h8i9j0k3",
+        "paymentMethod": "STRIPE",
+        "paymentToken": "tok_visa_1234567890",
+        "idempotencyKey": "payment-20240120-123456-xyz789",
+        "amount": 100.00,
+        "currency": "USD"
+      }
+    },
+    "webhookStripe": {
+      "method": "POST",
+      "url": "/api/webhooks/stripe",
+      "headers": {
+        "Content-Type": "application/json",
+        "Stripe-Signature": "<signature>"
+      },
+      "body": {
+        "id": "evt_1234567890",
+        "type": "payment_intent.captured",
+        "data": {
+          "object": {
+            "id": "pi_1234567890",
+            "amount": 10000,
+            "currency": "usd",
+            "status": "succeeded"
+          }
+        },
+        "idempotencyKey": "webhook-stripe-20240120-123456-evt123"
+      }
+    },
+    "getById": {
+      "method": "GET",
+      "url": "/api/payments/65a1b2c3d4e5f6g7h8i9j0k4",
+      "headers": {
+        "Authorization": "Bearer <user_token>"
+      },
+      "body": null
+    }
+  },
+  "users": {
+    "register": {
+      "method": "POST",
+      "url": "/api/users/register",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "email": "john.doe@example.com",
+        "name": "John Doe",
+        "password": "SecurePassword123!",
+        "phone": "+1234567890"
+      }
+    },
+    "login": {
+      "method": "POST",
+      "url": "/api/users/login",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "email": "john.doe@example.com",
+        "password": "SecurePassword123!"
+      }
+    },
+    "getProfile": {
+      "method": "GET",
+      "url": "/api/users/65a1b2c3d4e5f6g7h8i9j0k2",
+      "headers": {
+        "Authorization": "Bearer <user_token>"
+      },
+      "body": null
+    },
+    "getDonationHistory": {
+      "method": "GET",
+      "url": "/api/users/65a1b2c3d4e5f6g7h8i9j0k2/donation-history?page=1&limit=20",
+      "headers": {
+        "Authorization": "Bearer <user_token>"
+      },
+      "body": null
+    },
+    "createAnonymous": {
+      "method": "POST",
+      "url": "/api/users/anonymous",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "email": "anonymous@example.com",
+        "name": "Anonymous Donor"
+      }
+    }
+  },
+  "admin": {
+    "getCampaigns": {
+      "method": "GET",
+      "url": "/api/admin/campaigns?status=ACTIVE&page=1&limit=20",
+      "headers": {
+        "Authorization": "Bearer <admin_token>"
+      },
+      "body": null
+    },
+    "getMetrics": {
+      "method": "GET",
+      "url": "/api/admin/metrics",
+      "headers": {
+        "Authorization": "Bearer <admin_token>"
+      },
+      "body": null
+    },
+    "getHealth": {
+      "method": "GET",
+      "url": "/api/admin/health",
+      "headers": {
+        "Authorization": "Bearer <admin_token>"
+      },
+      "body": null
+    }
+  },
+  "notifications": {
+    "getUserNotifications": {
+      "method": "GET",
+      "url": "/api/notifications/user/65a1b2c3d4e5f6g7h8i9j0k2?page=1&limit=20",
+      "headers": {
+        "Authorization": "Bearer <user_token>"
+      },
+      "body": null
+    }
+  },
+  "chat": {
+    "createTicket": {
+      "method": "POST",
+      "url": "/api/chat/tickets",
+      "headers": {
+        "Authorization": "Bearer <user_token>",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "userId": "65a1b2c3d4e5f6g7h8i9j0k2",
+        "subject": "Payment Issue",
+        "message": "I was charged twice for my donation",
+        "priority": "HIGH"
+      }
+    },
+    "getMessages": {
+      "method": "GET",
+      "url": "/api/chat/tickets/65a1b2c3d4e5f6g7h8i9j0k8/messages",
+      "headers": {
+        "Authorization": "Bearer <user_token>"
+      },
+      "body": null
+    },
+    "sendMessage": {
+      "method": "POST",
+      "url": "/api/chat/tickets/65a1b2c3d4e5f6g7h8i9j0k8/messages",
+      "headers": {
+        "Authorization": "Bearer <user_token>",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "senderId": "65a1b2c3d4e5f6g7h8i9j0k2",
+        "senderType": "USER",
+        "message": "My pledge ID is 65a1b2c3d4e5f6g7h8i9j0k3"
+      }
+    }
+  }
+}
+

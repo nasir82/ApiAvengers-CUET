@@ -1,0 +1,53 @@
+.campaigns-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.campaigns-header h1 {
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.filters select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.campaign-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.campaign-meta {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.category {
+  background: #e7f3ff;
+  color: #0066cc;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.status {
+  background: #d4edda;
+  color: #155724;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
