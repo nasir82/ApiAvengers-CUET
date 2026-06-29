@@ -11,6 +11,7 @@ function Donate() {
     amount: '',
     message: '',
     anonymous: false,
+    donorReference: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -58,28 +59,25 @@ function Donate() {
 
     try {
       const user = JSON.parse(localStorage.getItem('user') || 'null');
-      
-      // Generate key ONCE (or reuse if retry)
-      // This ensures duplicate clicks use the SAME key
-      if (!idempotencyKey) {
-        const key = generateIdempotencyKey(id, user?.id, parseFloat(formData.amount));
-        setIdempotencyKey(key);
-      }
-      
-      // Generate payment key ONCE
-      if (!paymentIdempotencyKey) {
-        const key = `payment-${idempotencyKey}`;
-        setPaymentIdempotencyKey(key);
-      }
+
+      // Generate the keys into LOCAL variables so they are available on the very
+      // first click (React state updates are async and would still be null here).
+      // Reuse the existing state value on a retry so duplicate clicks share a key.
+      const pledgeKey = idempotencyKey || generateIdempotencyKey(id, user?.id, parseFloat(formData.amount));
+      const payKey = paymentIdempotencyKey || `payment-${pledgeKey}`;
+      if (!idempotencyKey) setIdempotencyKey(pledgeKey);
+      if (!paymentIdempotencyKey) setPaymentIdempotencyKey(payKey);
 
       // Step 1: Create pledge (uses SAME key for retries)
       const pledgeResponse = await pledgeAPI.create({
         campaignId: id,
         amount: parseFloat(formData.amount),
-        idempotencyKey, // SAME key for duplicate clicks
+        idempotencyKey: pledgeKey, // SAME key for duplicate clicks
         userId: user?.id || null,
         anonymous: formData.anonymous,
         message: formData.message,
+        // Lets unregistered donors look up their history later (e.g. by email)
+        donorReference: formData.donorReference || null,
       });
 
       const pledgeId = pledgeResponse.data.data.pledge._id || pledgeResponse.data.data.pledge.id;
@@ -88,7 +86,7 @@ function Donate() {
       await paymentAPI.create({
         pledgeId,
         amount: parseFloat(formData.amount),
-        idempotencyKey: paymentIdempotencyKey, // SAME key for duplicate clicks
+        idempotencyKey: payKey, // SAME key for duplicate clicks
         paymentMethod: 'STRIPE',
       });
 
@@ -132,6 +130,16 @@ function Donate() {
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               placeholder="Leave a message of support..."
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Email / reference (optional — track your donation as a guest)</label>
+            <input
+              type="text"
+              value={formData.donorReference}
+              onChange={(e) => setFormData({ ...formData, donorReference: e.target.value })}
+              placeholder="e.g. your email"
             />
           </div>
 

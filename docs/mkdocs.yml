@@ -1,0 +1,22 @@
+site_name: CareForAll Technical Documentation
+site_description: Stack-wise architecture and judging guide for CareForAll platform
+site_author: CareForAll Team
+
+theme:
+  name: material
+
+nav:
+  - Home: README.md
+  - Project Presentation: PROJECT_PRESENTATION.md
+  - Stacks:
+      - Frontend: stacks/frontend/README.md
+      - Backend: stacks/backend/README.md
+      - Infrastructure: stacks/infrastructure/README.md
+      - Observability: stacks/observability/README.md
+      - Testing: stacks/testing/README.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true

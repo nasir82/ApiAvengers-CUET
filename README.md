@@ -1,43 +1,50 @@
 # CareForAll Donation Platform
 
-## 🎯 Project Overview
-
-A robust, scalable fundraising backend platform designed to handle high traffic (1000+ req/s) with proper idempotency, event reliability, state management, and full observability.
-
----
-
-## 📚 Documentation
-
-**All documentation is in the `/docs` folder.**
-
-### Quick Links:
-- **[System Design](./docs/SYSTEM_DESIGN.md)** - Complete architecture & design (CHECKPOINT 1)
-- **[Architecture Presentation](./docs/ARCHITECTURE_PRESENTATION.md)** - For judges/demo
-- **[Infrastructure Checklist](./docs/INFRASTRUCTURE_CHECKLIST.md)** - Our work checklist
-- **[Quick Start](./QUICK_START.md)** - Get started quickly
-
-### Complete Documentation:
-See [docs/README.md](./docs/README.md) for full documentation index.
+A scalable, event-driven fundraising backend built as Node.js microservices, with
+a React frontend and a full observability stack. It demonstrates production
+reliability patterns: **idempotency**, **transactional outbox**, payment
+**state machine**, and **CQRS** read models.
 
 ---
 
 ## 🚀 Quick Start
 
-### Start Simple Services (Infrastructure Testing)
+Requires **Docker Desktop** only — the database runs locally in a container
+(no cloud account needed).
 
 ```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Test services
-curl http://localhost:3001/health
-curl http://localhost:3002/health
+docker compose up -d        # build/start everything
+docker compose ps           # all should be Up / healthy
 ```
 
-See [QUICK_START.md](./QUICK_START.md) for more details.
+Then open:
+
+- **Frontend** → http://localhost:3007
+- **API Gateway** → http://localhost:8000
+- Services → `3001`–`3006` (each exposes `/health` and `/metrics`)
+
+To verify every feature in one command:
+
+```powershell
+.\scripts\feature-test.ps1
+```
+
+For a manual, demo-ready walkthrough see **[SUPERVISOR_CHECKLIST.md](./SUPERVISOR_CHECKLIST.md)**.
+
+---
+
+## 🧩 Services
+
+| Service | Port | Responsibility | Pattern |
+|---------|------|----------------|---------|
+| [Campaign](./services/campaign-service/) | 3001 | Campaign CRUD | CQRS read model |
+| [Pledge](./services/pledge-service/) | 3002 | Donation pledges | Idempotency + Transactional Outbox |
+| [Payment](./services/payment-service/) | 3003 | Payment processing | State machine + webhooks |
+| [User](./services/user-service/) | 3004 | Auth & profiles | JWT |
+| [Admin](./services/admin-service/) | 3005 | Admin stats | — |
+| [Notification](./services/notification-service/) | 3006 | User notifications | Event-driven |
+
+Each service folder contains its own `README.md`.
 
 ---
 
@@ -45,53 +52,73 @@ See [QUICK_START.md](./QUICK_START.md) for more details.
 
 ```
 CUETHACK/
-├── services/
-│   ├── service-a/          # Simple CRUD API (for testing)
-│   └── service-b/          # Event Consumer (for testing)
-├── docs/                   # All documentation
-│   ├── SYSTEM_DESIGN.md
-│   ├── API_SPECIFICATION.md
-│   ├── MONGODB_SCHEMAS.md
-│   └── ...
-├── docker-compose.yml      # Infrastructure setup
-├── QUICK_START.md          # Quick start guide
-└── README.md               # This file
+├── services/               # 6 Node.js microservices (each has a README)
+├── frontend/               # React + Vite SPA (README inside)
+├── infrastructure/         # Nginx gateway, Prometheus, Grafana, Logstash (README inside)
+├── docs/                   # mkdocs site + per-stack docs
+├── examples/               # Example API requests/responses
+├── scripts/                # feature-test.ps1 (automated verification)
+├── docker-compose.yml      # Full stack incl. local MongoDB (replica set)
+├── SUPERVISOR_CHECKLIST.md # Manual step-by-step verification
+└── CareForAll_API.postman_collection.json
 ```
 
 ---
 
-## ✅ Current Status
+## 🏗️ Architecture
 
-### Completed:
-- ✅ Phase 1: Simple 2-service project
-- ✅ Docker Compose setup
-- ✅ System Design Document (CHECKPOINT 1)
-- ✅ Complete documentation
+```
+Frontend (3007) ─▶ API Gateway / Nginx (8000)
+                      ├─▶ Campaign (3001) ─┐
+                      ├─▶ Pledge   (3002) ─┤
+                      ├─▶ Payment  (3003) ─┼─▶ MongoDB (local, replica set rs0)
+                      ├─▶ User     (3004) ─┤
+                      ├─▶ Admin    (3005) ─┘
+                      └─▶ Notification (3006)
+        Pledge/Payment ─▶ Redis (idempotency)  &  RabbitMQ (events)
+        Events ─▶ Campaign (read model) & Notification (notifications)
+```
 
-### In Progress:
-- ⏳ Phase 2: Complete infrastructure setup
-- ⏳ Phase 3-10: Observability, CI/CD, etc.
-
----
-
-## 🎯 Key Features
-
-- **Idempotency** - Prevents duplicate charges
-- **Transactional Outbox** - No lost events
-- **State Machine** - Valid payment transitions
-- **CQRS Read Models** - Fast queries
-- **Full Observability** - Logs, metrics, traces
-- **Scalable** - 1000+ req/s capable
+Observability: RabbitMQ UI `15672`, Prometheus `9090`, Grafana `3000`,
+Jaeger `16686`, Kibana `5601`.
 
 ---
 
-## 📞 Team Resources
+## 🔑 Key Patterns
 
-- **Frontend Team**: See `docs/FRONTEND_DEVELOPER_GUIDE.md`
-- **Backend Team**: See `docs/BACKEND_ENGINEER_GUIDE.md`
-- **Infrastructure Team**: See `docs/INFRASTRUCTURE_CHECKLIST.md`
+- **Idempotency** — duplicate requests (same `idempotencyKey`) return the original result; no double charge. *(Pledge, Payment)*
+- **Transactional Outbox** — a pledge and its event are written in one MongoDB transaction; a worker publishes events reliably. *(Pledge)*
+- **State Machine** — only valid payment status transitions are allowed. *(Payment)*
+- **CQRS** — campaign totals are a materialized read model updated from events. *(Campaign)*
+- **Observability** — structured logs, Prometheus metrics, and Jaeger traces across all services.
 
 ---
 
-**For complete documentation, see the `/docs` folder.** 📚
+## 📚 Documentation
 
+- **[docs/](./docs/)** — full documentation site (per-stack guides under `docs/stacks/`)
+- **[SUPERVISOR_CHECKLIST.md](./SUPERVISOR_CHECKLIST.md)** — manual verification steps
+- **[docs/CICD.md](./docs/CICD.md)** — CI/CD pipeline (Checkpoint 4)
+- **[docs/SCALING.md](./docs/SCALING.md)** — horizontal scaling via Compose replicas (Checkpoint 1)
+- **[docs/OBSERVABILITY_SCENARIOS.md](./docs/OBSERVABILITY_SCENARIOS.md)** — tracing, stress & partial-failure demos (Checkpoint 3)
+- Per-segment `README.md` in each `services/*`, `frontend/`, and `infrastructure/`
+
+## ✅ Testing
+
+```bash
+# unit tests (per service, Jest)
+cd services/payment-service && npm install && npm test
+# end-to-end feature test (all patterns)
+./scripts/feature-test.ps1
+# load / stress
+./scripts/stress-test.ps1 -Requests 300
+```
+
+---
+
+## 🛑 Stop
+
+```bash
+docker compose down        # keep data (mongo-data volume)
+docker compose down -v     # wipe data too
+```

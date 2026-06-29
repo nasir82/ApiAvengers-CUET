@@ -50,6 +50,7 @@ function Profile() {
           <div className="profile-section">
             <h2>Account Information</h2>
             <div className="card">
+              <p><strong>User ID:</strong> {user._id || user.id}</p>
               <p><strong>Name:</strong> {user.name}</p>
               <p><strong>Email:</strong> {user.email}</p>
               <p><strong>Total Donated:</strong> ${user.totalDonated || 0}</p>

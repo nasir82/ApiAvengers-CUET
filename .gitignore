@@ -1,10 +1,3 @@
-# Exclude all markdown files except README.md, JUDGES_QUICK_TEST.md, SYSTEM_EXPLANATION.md, and IDEMPOTENCY_KEY_EXPLANATION.md
-*.md
-!README.md
-!JUDGES_QUICK_TEST.md
-!SYSTEM_EXPLANATION.md
-!IDEMPOTENCY_KEY_EXPLANATION.md
-
 # Dependencies
 node_modules/
 npm-debug.log*
@@ -147,14 +140,7 @@ credentials/
 config/local.json
 config/local.yml
 
-# Documentation (except README)
-docs/
-!docs/README.md
-
 # Test files (optional - uncomment if you don't want test files)
 # **/__tests__/
 # **/*.test.js
 # **/*.spec.js
-
-git add .gitattributes
-git add . --renormalize

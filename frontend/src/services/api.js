@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Relative base: the browser calls the frontend's own origin (e.g. http://localhost:3007/api),
+// and nginx (prod) / Vite (dev) proxies /api -> API gateway. Same-origin, no CORS, and no
+// dependency on a host port. Override with VITE_API_URL only for non-proxied setups.
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -30,6 +33,8 @@ export const pledgeAPI = {
   create: (data) => api.post('/pledges', data),
   getById: (id) => api.get(`/pledges/${id}`),
   getUserPledges: (userId, params = {}) => api.get(`/pledges/user/${userId}`, { params }),
+  // Donation history for unregistered donors, by the reference they used (e.g. email)
+  getByReference: (reference) => api.get(`/pledges/reference/${encodeURIComponent(reference)}`),
 };
 
 // Payment APIs

@@ -21,7 +21,7 @@ function Navbar() {
           </Link>
           <div className="nav-links">
             <Link to="/campaigns">Campaigns</Link>
-            <Link to="/admin">Admin</Link>
+            {user?.role === 'ADMIN' && <Link to="/admin">Admin</Link>}
             <Link to="/notifications">Notifications</Link>
             <div className="dropdown">
               <span className="dropdown-toggle">Testing</span>

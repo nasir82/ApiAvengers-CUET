@@ -3,9 +3,34 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const client = require('prom-client');
+const bcrypt = require('bcryptjs');
 const { connectDB } = require('./config/database');
 const logger = require('./utils/logger');
 const userRoutes = require('./routes/users');
+const User = require('./models/User');
+
+// Default admin account (idempotent): created on startup if it does not exist.
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@gmail.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '123456789';
+
+async function seedAdmin() {
+  try {
+    const existing = await User.findOne({ email: ADMIN_EMAIL });
+    if (existing) {
+      if (existing.role !== 'ADMIN') {
+        existing.role = 'ADMIN';
+        await existing.save();
+        logger.info('Promoted existing user to ADMIN', { email: ADMIN_EMAIL });
+      }
+      return;
+    }
+    const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
+    await User.create({ email: ADMIN_EMAIL, password: hashedPassword, name: 'Administrator', role: 'ADMIN' });
+    logger.info('Seeded default admin account', { email: ADMIN_EMAIL });
+  } catch (error) {
+    logger.error('Failed to seed admin account', { error: error.message });
+  }
+}
 
 const app = express();
 
@@ -89,6 +114,7 @@ const PORT = process.env.PORT || 3004;
 async function start() {
   try {
     await connectDB();
+    await seedAdmin();
     app.listen(PORT, () => {
       logger.info(`User Service started on port ${PORT}`);
     });

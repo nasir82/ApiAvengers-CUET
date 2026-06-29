@@ -1,33 +1,50 @@
-# MongoDB Atlas Connection Strings Reference:
-# Cluster 0: mongodb+srv://n45islam_db_user:RVUITOizESaUT09g@cluster0.vsbjucs.mongodb.net/<database>?retryWrites=true&w=majority
-# Cluster 1: mongodb+srv://nayemahmedr45_db_user:yjxyfUzzmgQRyMII@cluster1.85psutp.mongodb.net/<database>?retryWrites=true&w=majority
+# CareForAll - Docker Compose
 #
-# Database Names:
-# - campaigns (Cluster 0)
-# - pledges (Cluster 0)
-# - payments (Cluster 0)
-# - users (Cluster 1)
-# - admin (Cluster 1)
-# - notifications (Cluster 1)
+# Database: local MongoDB running as a single-node replica set (rs0).
+# The replica set is required for the multi-document transactions used by the
+# Pledge and Payment services. Each service uses its own database on the same
+# instance: campaigns, pledges, payments, users, admin, notifications.
+#
+# Connection string form: mongodb://mongo:27017/<database>?replicaSet=rs0
 
 services:
+  # MongoDB - Local database (single-node replica set, required for transactions)
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - careforall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}).ok }\" | grep -q 1"]
+      interval: 10s
+      timeout: 10s
+      start_period: 20s
+      retries: 12
+
   # Campaign Service - Campaign Management with CQRS Read Models
   campaign-service:
     build:
       context: ./services/campaign-service
       dockerfile: Dockerfile
-    container_name: campaign-service
     ports:
       - "3001:3001"
     environment:
       - PORT=3001
       - NODE_ENV=development
       - LOG_LEVEL=info
-      - MONGODB_URI=mongodb+srv://n45islam_db_user:RVUITOizESaUT09g@cluster0.vsbjucs.mongodb.net/campaigns?retryWrites=true&w=majority
+      - MONGODB_URI=mongodb://mongo:27017/campaigns?replicaSet=rs0
       - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
       - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
       - LOGSTASH_URL=logstash:8080
     depends_on:
+      mongo:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       jaeger:
@@ -49,19 +66,20 @@ services:
     build:
       context: ./services/pledge-service
       dockerfile: Dockerfile
-    container_name: pledge-service
     ports:
       - "3002:3002"
     environment:
       - PORT=3002
       - NODE_ENV=development
       - LOG_LEVEL=info
-      - MONGODB_URI=mongodb+srv://n45islam_db_user:RVUITOizESaUT09g@cluster0.vsbjucs.mongodb.net/pledges?retryWrites=true&w=majority
+      - MONGODB_URI=mongodb://mongo:27017/pledges?replicaSet=rs0
       - REDIS_URI=redis://redis:6379
       - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
       - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
       - LOGSTASH_URL=logstash:8080
     depends_on:
+      mongo:
+        condition: service_healthy
       redis:
         condition: service_healthy
       rabbitmq:
@@ -83,19 +101,20 @@ services:
     build:
       context: ./services/payment-service
       dockerfile: Dockerfile
-    container_name: payment-service
     ports:
       - "3003:3003"
     environment:
       - PORT=3003
       - NODE_ENV=development
       - LOG_LEVEL=info
-      - MONGODB_URI=mongodb+srv://n45islam_db_user:RVUITOizESaUT09g@cluster0.vsbjucs.mongodb.net/payments?retryWrites=true&w=majority
+      - MONGODB_URI=mongodb://mongo:27017/payments?replicaSet=rs0
       - REDIS_URI=redis://redis:6379
       - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
       - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
       - LOGSTASH_URL=logstash:8080
     depends_on:
+      mongo:
+        condition: service_healthy
       redis:
         condition: service_healthy
       rabbitmq:
@@ -119,19 +138,20 @@ services:
     build:
       context: ./services/user-service
       dockerfile: Dockerfile
-    container_name: user-service
     ports:
       - "3004:3004"
     environment:
       - PORT=3004
       - NODE_ENV=development
       - LOG_LEVEL=info
-      - MONGODB_URI=mongodb+srv://nayemahmedr45_db_user:yjxyfUzzmgQRyMII@cluster1.85psutp.mongodb.net/users?retryWrites=true&w=majority
+      - MONGODB_URI=mongodb://mongo:27017/users?replicaSet=rs0
       - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
       - JWT_SECRET=your-secret-key-change-in-production
       - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
       - LOGSTASH_URL=logstash:8080
     depends_on:
+      mongo:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       jaeger:
@@ -153,18 +173,19 @@ services:
     build:
       context: ./services/admin-service
       dockerfile: Dockerfile
-    container_name: admin-service
     ports:
       - "3005:3005"
     environment:
       - PORT=3005
       - NODE_ENV=development
       - LOG_LEVEL=info
-      - MONGODB_URI=mongodb+srv://nayemahmedr45_db_user:yjxyfUzzmgQRyMII@cluster1.85psutp.mongodb.net/admin?retryWrites=true&w=majority
+      - MONGODB_URI=mongodb://mongo:27017/admin?replicaSet=rs0
       - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
       - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
       - LOGSTASH_URL=logstash:8080
     depends_on:
+      mongo:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       jaeger:
@@ -186,18 +207,19 @@ services:
     build:
       context: ./services/notification-service
       dockerfile: Dockerfile
-    container_name: notification-service
     ports:
       - "3006:3006"
     environment:
       - PORT=3006
       - NODE_ENV=development
       - LOG_LEVEL=info
-      - MONGODB_URI=mongodb+srv://nayemahmedr45_db_user:yjxyfUzzmgQRyMII@cluster1.85psutp.mongodb.net/notifications?retryWrites=true&w=majority
+      - MONGODB_URI=mongodb://mongo:27017/notifications?replicaSet=rs0
       - RABBITMQ_URI=amqp://admin:admin123@rabbitmq:5672
       - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
       - LOGSTASH_URL=logstash:8080
     depends_on:
+      mongo:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       jaeger:
@@ -269,7 +291,7 @@ services:
       - careforall-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
       interval: 30s
       timeout: 10s
       start_period: 10s
@@ -446,11 +468,38 @@ services:
       start_period: 30s
       retries: 3
 
+  # cAdvisor - Container resource metrics (scraped by Prometheus)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    ports:
+      - "8082:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - careforall-network
+    restart: unless-stopped
+
+  # Node Exporter - Host machine metrics (scraped by Prometheus)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    networks:
+      - careforall-network
+    restart: unless-stopped
+
 networks:
   careforall-network:
     driver: bridge
 
 volumes:
+  mongo-data:
+    driver: local
   rabbitmq-data:
     driver: local
   redis-data:

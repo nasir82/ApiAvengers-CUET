@@ -10,6 +10,12 @@ const pledgeSchema = new mongoose.Schema({
     type: String,
     index: true
   },
+  // Optional reference (e.g. email) so UNREGISTERED donors can look up their
+  // donation history without an account.
+  donorReference: {
+    type: String,
+    index: true
+  },
   amount: {
     type: Number,
     required: true,

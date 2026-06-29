@@ -58,3 +58,13 @@ scrape_configs:
       - targets: ['notification-service:3006']
     metrics_path: '/metrics'
 
+  # Container metrics (cAdvisor)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Host metrics (Node Exporter)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+

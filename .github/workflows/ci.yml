@@ -1,0 +1,102 @@
+name: CI
+
+# Runs on every PR and every push to the default branch.
+# Configure branch protection on `main` to require the "test" checks so that
+# nothing merges unless CI succeeds (Checkpoint 4).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # 1) Detect which service(s) actually changed, so we only test/build those.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            campaign-service: 'services/campaign-service/**'
+            pledge-service: 'services/pledge-service/**'
+            payment-service: 'services/payment-service/**'
+            user-service: 'services/user-service/**'
+            admin-service: 'services/admin-service/**'
+            notification-service: 'services/notification-service/**'
+            frontend: 'frontend/**'
+
+  # 2) Run unit tests only for the changed components (matrix fans out).
+  test:
+    needs: changes
+    if: ${{ needs.changes.outputs.services != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.services) }}
+    name: test (${{ matrix.service }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Resolve working directory
+        id: dir
+        run: |
+          if [ "${{ matrix.service }}" = "frontend" ]; then
+            echo "path=frontend" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=services/${{ matrix.service }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install dependencies
+        working-directory: ${{ steps.dir.outputs.path }}
+        run: npm install --no-audit --no-fund
+      - name: Run tests
+        working-directory: ${{ steps.dir.outputs.path }}
+        run: npm test
+
+  # 3) Build & tag the Docker image only for changed services (semver + sha).
+  #    Only on push to main; depends on tests passing.
+  build:
+    needs: [changes, test]
+    if: ${{ github.event_name == 'push' && needs.changes.outputs.services != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.services) }}
+    name: build (${{ matrix.service }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve dir & version
+        id: meta
+        run: |
+          if [ "${{ matrix.service }}" = "frontend" ]; then DIR=frontend; else DIR="services/${{ matrix.service }}"; fi
+          VERSION=$(node -p "require('./$DIR/package.json').version")
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Build and tag image (semantic version + commit SHA)
+        run: |
+          IMAGE=careforall/${{ matrix.service }}
+          docker build \
+            -t "$IMAGE:${{ steps.meta.outputs.version }}" \
+            -t "$IMAGE:${{ github.sha }}" \
+            "${{ steps.meta.outputs.dir }}"
+          echo "Built $IMAGE:${{ steps.meta.outputs.version }}"
+      # To publish, log in to a registry and `docker push` both tags here
+      # (add registry credentials as repository secrets first).
+
+  # 4) Validate the self-contained stack composes correctly (lightweight CD check).
+  compose-validate:
+    needs: changes
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker-compose
+        run: docker compose config --quiet && echo "docker-compose is valid"

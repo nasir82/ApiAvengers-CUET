@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    // Only an authenticated ADMIN may view the dashboard.
+    if (!token || user?.role !== 'ADMIN') {
+      navigate('/login', { replace: true, state: { from: '/admin' } });
+      return;
+    }
     loadStats();
   }, []);
 

@@ -12,7 +12,7 @@ router.post('/', async (req, res) => {
   session.startTransaction();
 
   try {
-    const { campaignId, amount, idempotencyKey, userId, anonymous, message } = req.body;
+    const { campaignId, amount, idempotencyKey, userId, anonymous, message, donorReference } = req.body;
 
     // Validation
     if (!campaignId || !amount || !idempotencyKey) {
@@ -57,6 +57,7 @@ router.post('/', async (req, res) => {
     const pledge = new Pledge({
       campaignId,
       userId: userId || null,
+      donorReference: donorReference || null,
       amount,
       idempotencyKey,
       message: message || '',
@@ -153,6 +154,25 @@ router.get('/:id', async (req, res) => {
         code: 'INTERNAL_ERROR',
         message: error.message
       }
+    });
+  }
+});
+
+// Get donation history by donor reference (supports UNREGISTERED donors).
+// A guest who donated with a reference (e.g. their email) can retrieve all of
+// their donations without an account.
+router.get('/reference/:reference', async (req, res) => {
+  try {
+    const pledges = await Pledge.find({ donorReference: req.params.reference })
+      .sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      data: { pledges, total: pledges.length }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: error.message }
     });
   }
 });
