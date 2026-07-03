@@ -4,7 +4,6 @@ require('./tracing');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const winston = require('winston');
 const client = require('prom-client');
 const { connectDB } = require('./config/database');
 const eventConsumer = require('./services/eventConsumer');
@@ -94,7 +93,7 @@ app.get('/metrics', async (req, res) => {
 app.use('/api/campaigns', campaignRoutes);
 
 // Error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   logger.error('Unhandled error', {
     error: err.message,
     stack: err.stack,
