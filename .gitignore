@@ -140,6 +140,9 @@ credentials/
 config/local.json
 config/local.yml
 
+# Documentation (kept local only, not tracked in git)
+docs/
+
 # Test files (optional - uncomment if you don't want test files)
 # **/__tests__/
 # **/*.test.js
