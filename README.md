@@ -216,7 +216,7 @@ docker compose down -v    # stop and wipe all data
 
 <div align="center">
 
-**Built by [Md. Nasir Uddin](https://github.com/nasir82)** · CUET
+**Built by [Md. Nasir Uddin](https://github.com/nasir82)** 
 Licensed under the [MIT License](./LICENSE)
 
 </div>
